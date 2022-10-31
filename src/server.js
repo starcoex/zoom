@@ -11,15 +11,20 @@ app.set("views", process.cwd() + "/src/views");
 app.get("/", (req, res) => res.render("home"));
 app.get("/*", (req, res) => res.redirect("/"));
 
+const sockets = [];
+// console.log(sockets);
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 wss.on("connection", (socket) => {
+  sockets.push(socket);
   console.log("Connected to Brower");
   socket.on("close", () => console.log("Disconnected to Client"));
-  socket.on("message", (message) =>
-    console.log("Brower to ", message.toString())
-  );
-  socket.send("Hello Server to Client");
+  socket.on("message", (message) => {
+    sockets.forEach((aSocket) => {
+      aSocket.send(message.toString());
+    });
+  });
+  // socket.on("message", (message) => socket.send(message.toString()));
 });
 
 server.listen(PORT, (req, res) =>
