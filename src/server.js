@@ -14,7 +14,10 @@ app.get("/*", (req, res) => res.redirect("/"));
 const server = http.createServer(app);
 const io = SocketIO(server);
 io.on("connection", (socket) => {
-  console.log(socket);
+  socket.on("enter_room", (msg, callback) => {
+    console.log(msg);
+    callback("Got Server To Client");
+  });
 });
 
 // const sockets = [];
