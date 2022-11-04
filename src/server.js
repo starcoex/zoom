@@ -12,17 +12,33 @@ app.get("/", (req, res) => res.render("home"));
 app.get("/*", (req, res) => res.redirect("/"));
 
 const sockets = [];
-// console.log(sockets);
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 wss.on("connection", (socket) => {
   sockets.push(socket);
+  socket["nickName"] = "Anon";
+  console.log(sockets);
   console.log("Connected to Brower");
   socket.on("close", () => console.log("Disconnected to Client"));
   socket.on("message", (message) => {
-    sockets.forEach((aSocket) => {
-      aSocket.send(message.toString());
-    });
+    const parsed = JSON.parse(message);
+    switch (parsed.type) {
+      case "New_Message":
+        sockets.forEach((aSocket) => {
+          aSocket.send(`${socket.nickName}: ${parsed.payload.toString()}`);
+        });
+      case "nickName":
+        socket["nickName"] = parsed.payload.toString();
+        break;
+    }
+
+    // if (parsed.type === "New_Message") {
+    //   sockets.forEach((aSocket) => {
+    //     aSocket.send(`${socket.nickName}: ${parsed.payload.toString()}`);
+    //   });
+    // } else if (parsed.type === "nickName") {
+    //   socket["nickName"] = parsed.payload.toString();
+    // }
   });
   // socket.on("message", (message) => socket.send(message.toString()));
 });
