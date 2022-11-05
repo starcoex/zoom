@@ -1,6 +1,7 @@
 import http from "http";
 import SocketIO from "socket.io";
 import express from "express";
+import { copyFileSync } from "fs";
 
 const app = express();
 const PORT = 4100;
@@ -14,34 +15,40 @@ app.get("/*", (req, res) => res.redirect("/"));
 const server = http.createServer(app);
 const io = SocketIO(server);
 io.on("connection", (socket) => {
-  socket.on("enter_room", (msg, callback) => {
-    console.log(msg);
-    callback("Got Server To Client");
+  socket["nickname"] = "Anonymous";
+  socket.onAny((event) => {
+    console.log(event);
+  });
+  socket.on("enter_room", (roomName, nickName, callback) => {
+    socket["nickname"] = nickName;
+    // console.log(socket.rooms);
+    socket.join(roomName);
+    // console.log(socket.rooms);
+    socket.to(roomName).emit("welcome", socket.nickname);
+    callback();
+  });
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) =>
+      socket.to(room).emit("bye", socket.nickname)
+    );
+
+    // for (const room of socket.rooms) {
+    //   if (room !== socket.id) {
+    //     socket.to(room).emit("bye", socket.nickanme);
+    //   } else {
+    //     socket.to(room).emit("bye2");
+    //   }
+    // }
+  });
+  socket.on("new_message", (msg, room, callback) => {
+    socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
+    callback();
+  });
+  socket.on("nick_name", (nickname) => {
+    socket["nickname"] = nickname;
+    console.log(socket["nickname"]);
   });
 });
-
-// const sockets = [];
-// const server = http.createServer(app);
-// const wss = new WebSocket.Server({ server });
-// wss.on("connection", (socket) => {
-//   sockets.push(socket);
-//   socket["nickName"] = "Anon";
-//   console.log(sockets);
-//   console.log("Connected to Brower");
-//   socket.on("close", () => console.log("Disconnected to Client"));
-//   socket.on("message", (message) => {
-//     const parsed = JSON.parse(message);
-//     switch (parsed.type) {
-//       case "New_Message":
-//         sockets.forEach((aSocket) => {
-//           aSocket.send(`${socket.nickName}: ${parsed.payload.toString()}`);
-//         });
-//       case "nickName":
-//         socket["nickName"] = parsed.payload.toString();
-//         break;
-//     }
-//   });
-// });
 
 server.listen(PORT, (req, res) =>
   console.log(`Zoom WebSocket Sever Start http://localhost:${PORT} `)

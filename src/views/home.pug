@@ -6,14 +6,25 @@ html(lang="en")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
     link(rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css")
     title Zomm
-  body 
+  body
     header 
       h1 Zoom
     main
       div#welcome
         form(action="") 
-          input(type="text" required placeholder="room name")
+          input#roomName(type="text" required placeholder="room name")
+          input#nickName(type="text" required placeholder="Nick name")
           button Enter Room
+      div#room
+        h3
+        ul
+        form#nick(action="")
+          input(type="text" required placeholder="Nick Name")
+          button Save
+        form#msg(action="")
+          input(type="text" required placeholder="Message")
+          button Send
+
       
     script(src="/socket.io/socket.io.js") 
     script(src="/public/js/app.js") 
